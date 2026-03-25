@@ -23,13 +23,10 @@ console.error = (...args) => {
 
    if (
       message?.includes('Bad MAC') ||
-      message?.includes('Session error:')
+      message?.includes('Session error:') ||
+      message?.includes('closed session') ||
+      message?.includes('Failed to decrypt')
    ) {
-      return
-   }
-
-   if (message?.includes('Failed to decrypt')) {
-      originalConsoleError(`[BAILEYS]: ${message}`)
       return
    }
 
