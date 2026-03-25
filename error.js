@@ -75,7 +75,8 @@ process.on('unhandledRejection', (reason, promise) => {
       reason?.message?.includes('jidDecode') ||
       reason?.message?.includes('item-not-found') ||
       reason?.message?.includes('bad-request') ||
-      reason?.message?.includes('forbidden')
+      reason?.message?.includes('forbidden') ||
+      reason?.message?.includes(`(reading 'toString')`)
    ) return
    const date = format(Date.now(), 'dd/MM/yy HH:mm:ss')
    console.error(chalk.black(chalk.bgRed(` Rejection `)), chalk.black(chalk.bgBlue(` ${date} `)), ':', colors.gray(reason))

@@ -26,9 +26,9 @@
    "homepage": "https://github.com/neoxr/neoxr-bot#readme",
    "dependencies": {
       "@adiwajshing/keyed-db": "^0.2.4",
-      "@neoxr/wb": "^6.0.0-rc.35",
+      "@neoxr/wb": "^6.0.0-rc.36",
       "audio-decode": "^2.1.3",
-      "baileys": "npm:@neoxr/baileys@8.3.1",
+      "baileys": "npm:@neoxr/baileys@8.3.2",
       "cfonts": "3.1.1",
       "html-entities": "^2.5.2",
       "node-gtts": "^2.0.2",

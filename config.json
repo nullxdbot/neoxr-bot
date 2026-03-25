@@ -4,6 +4,8 @@
    "database": "data",
    "limit": 15,
    "ram_limit": "900mb",
+   "cpu_limit": true,
+   "cpu_threshold": 85,
    "max_upload": 50,
    "max_upload_free": 25,
    "cooldown": 3,
