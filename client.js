@@ -10,21 +10,8 @@ import colors from 'colors'
 import cron from 'node-cron'
 import extra from './lib/listeners-extra.js'
 import { stringify } from 'flatted'
+import system from './lib/adapter.js'
 
-const url = process?.env?.DATABASE_URL
-const strategies = [
-   { regex: /mongo/i, database: (url) => Database.saveToMongo(url, Config.database), session: 'mongo', name: 'Mongo' },
-   { regex: /postgres/i, database: (url) => Database.saveToPostgres(url, Config.database), session: 'postgresql', name: 'PostgreSQL' },
-   { regex: /mysql/i, database: (url) => Database.saveToMySQL(url, Config.database), session: 'mysql', name: 'MySQL' },
-   { regex: /rediss/i, database: (url) => Database.saveToRedis(url, Config.database), session: 'redis', name: 'Redis' }
-].find(({ regex }) => url && regex.test(url))
-const system = {
-   database: await (strategies
-      ? strategies.database(url)
-      : Database.saveToLocal(Config.database)),
-   session: strategies?.session || 'local',
-   name: strategies?.name || 'Local'
-}
 
 const connect = async () => {
    try {
