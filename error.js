@@ -2,6 +2,10 @@ import colors from 'colors'
 import chalk from 'chalk'
 import { format } from 'date-fns'
 
+console.dim = function(msg) {
+   console.log(`\x1b[2m${msg}\x1b[0m`)
+}
+
 const originalConsoleInfo = console.info
 console.info = (...args) => {
    const message = args?.[0]

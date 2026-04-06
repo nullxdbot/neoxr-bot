@@ -1,17 +1,16 @@
-import { Client, Config, Database, Utils } from '@neoxr/wb'
+import { Client, Config, Utils } from '@neoxr/wb'
 import baileys from './lib/engine.js'
 import './lib/proto.js'
 import './error.js'
 import './lib/config.js'
 import './lib/functions.js'
 import bytes from 'bytes'
-import fs from 'node:fs'
+import fsPromise from 'fs/promises'
 import colors from 'colors'
 import cron from 'node-cron'
 import extra from './lib/listeners-extra.js'
-import { stringify } from 'flatted'
+import { models, structure } from './lib/models.js'
 import system from './lib/adapter.js'
-
 
 const connect = async () => {
    try {
@@ -43,17 +42,23 @@ const connect = async () => {
 
       client.once('connect', async res => {
          try {
-            const defaults = { users: [], chats: [], groups: [], statistic: {}, sticker: {}, setting: {}, ...(await system.database.fetch() || {}) }
-            const previous = await system.database.fetch()
-            if (!previous || typeof previous !== 'object' || !Object.keys(previous).length) {
-               global.db = defaults
-               await system.database.save(defaults)
-            } else {
-               global.db = previous
+            await system.proxy.init(models, structure, Config.database)
+
+            const isEmpty = global.db.users.length === 0 && global.db.chats.length === 0
+
+            if (isEmpty) {
+               const previous = await system.database.fetch()
+
+               if (previous && Object.keys(previous).length > 0) {
+                  console.dim('[Proxy DB] Old data found, starting migration...')
+                  await system.proxy.migrate(previous, structure)
+                  console.dim('[Proxy DB] Migration successful!')
+               }
             }
          } catch (e) {
             Utils.printError(e)
          }
+
          if (res && typeof res === 'object' && res.message) Utils.logFile(res.message)
       })
 
@@ -71,15 +76,16 @@ const connect = async () => {
             }
          }, 60 * 1000)
 
-         setInterval(async () => {
-            if (global.db) await system.database.save(global.db)
-         }, 60 * 1000 * (['local', 'sqlite'].includes(system.session) ? 3 : 5))
-
          cron.schedule('0 12 * * *', async () => {
             if (global?.db?.setting?.autobackup) {
-               await system.database.save(global.db)
-               fs.writeFileSync(Config.database + '.json', stringify(global.db), 'utf-8')
-               await client.sock.sendFile(Config.owner + '@s.whatsapp.net', fs.readFileSync('./' + Config.database + '.json'), Config.database + '.json', '', null)
+               const data = await system.proxy.backup(structure, Config.database)
+               const now = new Intl.DateTimeFormat('en-CA', { timeZone: process.env.TZ, hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date()).replace(', ', '_').replace(/:/g, '-')
+               const filename = `${Config.database}-${now}.json`
+               await fsPromise.writeFile(filename, data, 'utf-8')
+               const buffer = await fsPromise.readFile(filename)
+               await client.sendFile(`${Config.owner}@s.whatsapp.net`, buffer, filename, '', null).then(async () => {
+                  await fsPromise.unlink(filename)
+               })
             }
          })
 
