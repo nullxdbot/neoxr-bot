@@ -83,7 +83,7 @@ const connect = async () => {
                const filename = `${Config.database}-${now}.json`
                await fsPromise.writeFile(filename, data, 'utf-8')
                const buffer = await fsPromise.readFile(filename)
-               await client.sendFile(`${Config.owner}@s.whatsapp.net`, buffer, filename, '', null).then(async () => {
+               await client.sock.sendFile(`${Config.owner}@s.whatsapp.net`, buffer, filename, '', null).then(async () => {
                   await fsPromise.unlink(filename)
                })
             }
