@@ -12,6 +12,8 @@ const spam = new Spam({
 })
 import schema from './lib/schema.js'
 
+if (!global.typo) global.typo = new Map()
+
 export default async (client, ctx) => {
    let { store, m, body, prefix, plugins, commands, args, command, text, prefixes, core, system } = ctx
    try {
@@ -43,6 +45,44 @@ export default async (client, ctx) => {
       const admins = m.isGroup ? client.getAdmin(participants) : []
       const isAdmin = m.isGroup ? admins.includes(m.sender) : false
       const isBotAdmin = m.isGroup ? admins.includes((client.user.id.split`:`[0]) + '@s.whatsapp.net') : false
+
+      if (body && !isNaN(body) && global.typo.has(m.sender)) {
+         let session = global.typo.get(m.sender)
+         let choice = parseInt(body) - 1
+
+         if (session.commands && session.commands[choice]) {
+            let selectedCommand = session.commands[choice]
+            clearTimeout(session.timeout)
+
+            command = selectedCommand
+            prefix = session.prefix
+            text = session.text || ''
+            args = session.args || []
+            body = prefix + command + (text ? ' ' + text : '')
+
+            if (session.quoted) {
+               m.quoted = session.quoted
+               m.msg.contextInfo = {
+                  quotedMessage: session.quoted.message || session.quoted,
+                  stanzaId: session.quoted.id || session.quoted.key.id,
+                  participant: session.quoted.sender || session.quoted.key.participant || session.quoted.key.remoteJid
+               }
+            }
+
+            ctx.command = command
+            ctx.prefix = prefix
+            ctx.body = body
+            ctx.args = args
+            ctx.text = text
+            if (ctx.core) {
+               ctx.core.prefix = prefix
+               ctx.core.command = command
+            }
+
+            global.typo.delete(m.sender)
+            await client.reply(m.chat, `🚀 Executing *${prefix + command}*...`, m)
+         }
+      }
 
       const isSpam = spam.detection(client, m, {
          prefix, command, commands, users, cooldown,
@@ -107,9 +147,33 @@ export default async (client, ctx) => {
          }
       }
       if (body && !setting.self && core.prefix != setting.onlyprefix && commands.includes(core.command) && !setting.multiprefix && !Config.evaluate_chars.includes(core.command)) return client.reply(m.chat, `🚩 *Incorrect prefix!*, this bot uses prefix : *[ ${setting.onlyprefix} ]*\n\n➠ ${setting.onlyprefix + core.command} ${text || ''}`, m)
+
       const matcher = Utils.matcher(command, commands).filter(v => v.accuracy >= 60)
       if (prefix && !commands.includes(command) && matcher.length > 0 && !setting.self) {
-         if (!m.isGroup || (m.isGroup && !groupSet.mute)) return client.reply(m.chat, `🚩 Command you are using is wrong, try the following recommendations :\n\n${matcher.map(v => '➠ *' + (prefix ? prefix : '') + v.string + '* (' + v.accuracy + '%)').join('\n')}`, m)
+         if (!m.isGroup || (m.isGroup && !groupSet.mute)) {
+
+            if (global.typo.has(m.sender)) clearTimeout(global.typo.get(m.sender).timeout)
+
+            let mime = (m.quoted ? m.quoted.mtype : m.mtype)
+            let isMedia = /image|video|sticker|audio|document/.test(mime)
+
+            global.typo.set(m.sender, {
+               commands: matcher.slice(0, 3).map(v => v.string),
+               prefix: prefix,
+               text: text,
+               args: args,
+               quoted: m.quoted ? m.quoted : (isMedia ? m : null),
+               timeout: setTimeout(() => {
+                  global.typo.delete(m.sender)
+               }, 180000)
+            })
+
+            let caption = `🚩 *Command not found.* Did you mean :\n\n`
+            caption += global.typo.get(m.sender).commands.map((v, i) => `*${i + 1}.* ${prefix + v} (${matcher[i].accuracy}%)`).join('\n')
+            caption += `\n\n> Reply with the *number* to execute. (Expires in 3 minutes)`
+
+            return client.reply(m.chat, caption, m)
+         }
       }
 
       if (
