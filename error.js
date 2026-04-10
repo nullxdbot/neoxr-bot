@@ -2,7 +2,7 @@ import colors from 'colors'
 import chalk from 'chalk'
 import { format } from 'date-fns'
 
-console.dim = function(msg) {
+console.dim = function (msg) {
    console.log(`\x1b[2m${msg}\x1b[0m`)
 }
 
@@ -29,7 +29,9 @@ console.error = (...args) => {
       message?.includes('Bad MAC') ||
       message?.includes('Session error:') ||
       message?.includes('closed session') ||
-      message?.includes('Failed to decrypt')
+      message?.includes('Failed to decrypt') ||
+      message?.includes('sslmode') ||
+      message?.includes('ssl-mode')
    ) {
       return
    }
