@@ -62,11 +62,6 @@ export default async (client, ctx) => {
 
             if (session.quoted) {
                m.quoted = session.quoted
-               m.msg.contextInfo = {
-                  quotedMessage: session.quoted.message || session.quoted,
-                  stanzaId: session.quoted.id || session.quoted.key.id,
-                  participant: session.quoted.sender || session.quoted.key.participant || session.quoted.key.remoteJid
-               }
             }
 
             ctx.command = command
