@@ -51,11 +51,10 @@
 
 ### ⌗ CLOUD DATABASE
 
-- [x] PostgreSQL [Supabase](https://supabase.com/pricing) ~ [Setup Tutorial](https://youtu.be/kdyF7cP9E7k?si=YjlxI5OMHBdkSxkw) (Recommended)
-- [x] PostgreSQL [Cockroach](https://cockroachlabs.cloud/) (Recommended)
-- [x] PostgreSQL [Aiven](https://aiven.io) ~ Remove ```?sslmode=required```
-- [x] MySQL [Aiven](https://aiven.io) 
-- [x] MongoDB [MongoDB](https://www.mongodb.com) ~ [Setup Tutorial](https://youtu.be/-9lfyWz0SdE?si=nmyA6qeBYKbO4R45) (Recommended)
+- [x] PostgreSQL : [Neon](https://neon.com/), [Cockroach](https://cockroachlabs.cloud/), [Filess](https://filess.io/), [Aiven](https://aiven.io), [Supabase](https://supabase.com/pricing) ([Setup Tutorial](https://youtu.be/kdyF7cP9E7k?si=YjlxI5OMHBdkSxkw))
+- [x] MySQL : [Aiven](https://aiven.io), [Filess](https://filess.io/)
+- [x] Redis : [Upstash](https://upstash.com/)
+- [x] Mongo : [MongoDB](https://www.mongodb.com) ([Setup Tutorial](https://youtu.be/-9lfyWz0SdE?si=nmyA6qeBYKbO4R45))
 
 > [!IMPORTANT]
 > Database setup tutorial, choose based on language : [ID](https://github.com/neoxr/neoxr-bot/blob/5.0-ESM/documentation/DATABASE-ID.md) | [EN](https://github.com/neoxr/neoxr-bot/blob/5.0-ESM/documentation/DATABASE-EN.md)
@@ -93,7 +92,7 @@ Configuration of this script consists of two files: [config.json](https://github
 ### Neoxr API : https://api.neoxr.my.id
 API_KEY = ''
 
-### Database (Mongo, PostgreSQL, MySQL) — leave empty for local (JSON)
+### Database (Mongo, PostgreSQL, MySQL, Redis) — leave empty for local (JSON)
 DATABASE_URL = ''
 
 ### Timezone (Important)
