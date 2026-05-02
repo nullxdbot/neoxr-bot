@@ -8,10 +8,95 @@ jobs:
   notify-neoxr:
     runs-on: ubuntu-latest
     steps:
-      - name: Comment on new issue
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Detect duplicate issues
+        id: detect-duplicate
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.PERSONAL_TOKEN }}
+          github-token: ${{ steps.generate-token.outputs.token }}
+          script: |
+            const issue = context.payload.issue
+            const title = issue.title.toLowerCase().trim()
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              per_page: 100
+            })
+
+            function levenshtein(a, b) {
+              const m = a.length
+              const n = b.length
+              const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0))
+              for (let i = 0; i <= m; i++) dp[i][0] = i
+              for (let j = 0; j <= n; j++) dp[0][j] = j
+              for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                  const cost = a[i - 1] === b[j - 1] ? 0 : 1
+                  dp[i][j] = Math.min(
+                    dp[i - 1][j] + 1,
+                    dp[i][j - 1] + 1,
+                    dp[i - 1][j - 1] + cost
+                  )
+                }
+              }
+              return dp[m][n]
+            }
+
+            function similarity(a, b) {
+              const distance = levenshtein(a, b)
+              const maxLen = Math.max(a.length, b.length)
+              return maxLen === 0 ? 1 : 1 - distance / maxLen
+            }
+
+            let duplicate = null
+            for (const i of issues) {
+              if (i.number === issue.number) continue
+              const sim = similarity(i.title.toLowerCase().trim(), title)
+              if (sim >= 0.9) {
+                duplicate = i
+                break
+              }
+            }
+
+            if (duplicate) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `⚠️ Isu ini terdeteksi duplikat dengan #${duplicate.number}.`
+              })
+
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['duplicate']
+              })
+
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              })
+
+              core.setOutput('is_duplicate', 'true')
+            } else {
+              core.setOutput('is_duplicate', 'false')
+            }
+
+      - name: Comment on new issue
+        if: steps.detect-duplicate.outputs.is_duplicate == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
           script: |
             const issue = context.payload.issue
             const message = `
@@ -29,13 +114,3 @@ jobs:
               issue_number: issue.number,
               body: message
             })
-
-      - name: Send issue info to owner via WhatsApp
-        run: |
-          curl -X POST "https://wapify.neoxr.eu/v1/text" \
-            --header "x-neoxr-token: ${{ secrets.WG_TOKEN }}" \
-            --header "Content-Type: application/json" \
-            --data-raw "{
-              \"number\": \"${{ secrets.WG_NUMBER }}\",
-              \"text\": \"🔔 Issue baru dari repository *${{ github.repository }}*:\\n\\n#${{ github.event.issue.number }} - ${{ github.event.issue.title }}\\n\\n${{ github.event.issue.html_url }}\"
-            }"
