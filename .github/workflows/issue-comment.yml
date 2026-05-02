@@ -70,7 +70,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
-                body: `⚠️ Isu ini terdeteksi duplikat dengan #${duplicate.number}.`
+                body: `⚠️ This issue is detected as a duplicate of #${duplicate.number}.`
               })
 
               await github.rest.issues.addLabels({
