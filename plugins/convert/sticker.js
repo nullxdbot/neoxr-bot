@@ -5,13 +5,10 @@ export const run = {
    category: 'converter',
    async: async (m, {
       client,
-      text,
-      isPrefix,
-      command,
+      setting: exif,
       Utils
    }) => {
       try {
-         let exif = global.db.setting
          if (m.quoted ? m.quoted.message : m.msg.viewOnce) {
             let type = m.quoted ? Object.keys(m.quoted.message)[0] : m.mtype
             let q = m.quoted ? m.quoted.message[type] : m.msg
@@ -20,12 +17,14 @@ export const run = {
                if (q.seconds > 10) return client.reply(m.chat, Utils.texted('bold', `🚩 Maximum video duration is 10 seconds.`), m)
                return await client.sendSticker(m.chat, img, m, {
                   packname: exif.sk_pack,
-                  author: exif.sk_author
+                  author: exif.sk_author,
+                  meta: true
                })
             } else if (/image/.test(type)) {
                return await client.sendSticker(m.chat, img, m, {
                   packname: exif.sk_pack,
-                  author: exif.sk_author
+                  author: exif.sk_author,
+                  meta: true
                })
             }
          } else {
@@ -36,7 +35,8 @@ export const run = {
                if (!img) return client.reply(m.chat, global.status.wrong, m)
                return await client.sendSticker(m.chat, img, m, {
                   packname: exif.sk_pack,
-                  author: exif.sk_author
+                  author: exif.sk_author,
+                  meta: true
                })
             } else if (/video/.test(mime)) {
                if ((q.msg || q).seconds > 10) return client.reply(m.chat, Utils.texted('bold', `🚩 Maximum video duration is 10 seconds.`), m)
@@ -44,7 +44,8 @@ export const run = {
                if (!img) return client.reply(m.chat, global.status.wrong, m)
                return await client.sendSticker(m.chat, img, m, {
                   packname: exif.sk_pack,
-                  author: exif.sk_author
+                  author: exif.sk_author,
+                  meta: true
                })
             } else client.reply(m.chat, Utils.texted('bold', `Stress ??`), m)
          }

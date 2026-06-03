@@ -67,7 +67,21 @@ export const run = {
                   muted: 'There is also muted text like this.'
                },
                {
-                  suggestions: ['N', 'E', 'O', 'X', 'R', 'BOT']
+                  suggestions: {
+                     list: ['N', 'E', 'O', 'X', 'R', 'BOT']
+                  }
+               },
+               {
+                  suggestions: {
+                     type: 2,
+                     list: 'NEOXR BOT'.replace(' ', '').split('')
+                  }
+               },
+               {
+                  suggestions: {
+                     type: 1,
+                     list: 'NEOXR BOT'
+                  }
                },
                {
                   sources: [{
