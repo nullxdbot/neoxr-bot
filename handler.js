@@ -35,9 +35,9 @@ export default async (client, ctx) => {
 
       schema(m, Config)
 
-      let groupSet = global.db.groups.find(v => v.jid === m.chat)
-      let chats = global.db.chats.find(v => v.jid === m.chat)
-      let users = global.db.users.find(v => v.jid === m.sender)
+      let groupSet = global.db.groups.get(m.chat)
+      let chats = global.db.chats.get(m.chat)
+      let users = global.db.users.get(m.sender)
       let setting = global.db.setting
       let isOwner = [client.decodeJid(client.user.id).replace(/@.+/, ''), Config.owner, ...setting.owners].map(v => v + '@s.whatsapp.net').includes(m.sender)
       let isPrem = users && users.premium || isOwner
@@ -201,7 +201,8 @@ export default async (client, ctx) => {
                   type: 'preview-link',
                   /* choose: landscape (default), potrait, square */
                   ratio: 'landscape',
-                  url: setting.link
+                  url: setting.link,
+                  icon: setting.icon ? Utils.isUrl(setting.icon) ? setting.icon : Buffer.from(setting.icon, 'base64') : null
                }).then(() => chats.lastchat = new Date() * 1)
                continue
             }
